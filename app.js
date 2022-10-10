@@ -1,14 +1,22 @@
+import mongoose from 'mongoose';
+mongoose.Promise = Promise;
+mongoose.connect('mongodb://127.0.0.1/tasked');
 import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
+import tasksRouter from "./routes/tasks.js";
+import projectsRouter from "./routes/projects.js";
 
 const app = express();
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use("/tasks", tasksRouter);
+app.use("/projects", projectsRouter);
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
