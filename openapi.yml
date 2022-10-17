@@ -1,0 +1,206 @@
+openapi: 3.0.3
+info:
+  title: Tasked - OpenAPI 3.0
+  description: |-
+    Tasked est une application de timbrage. L'application permet de créer des projets, puis de créer des tâches en "timbrant". 
+    L'idée est de l'utiliser au sein d'une entreprise afin que l'employé ait simplement à passer son téléphone sur un lecteur NFC pour envoyer une requête de "début de tâche". Idem pour la fin de la journée
+    
+    Quelques liens utiles:
+    - [Cours ArchiOWeb](https://github.com/MediaComem/comem-archioweb)
+    - [Projet github "tasked"](https://github.com/emilevl/tasked)
+    - [API Specification](https://swagger.io/specification/)
+  termsOfService: http://swagger.io/terms/
+  # TODO: Voir ce qu'il y a à garder
+  contact:
+    - email: emile.vianney-liaud@heig-vd.ch
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+  # TODO: Compléter nom du serveur
+servers:
+  - url: https://tasked.onrender.com/api/
+tags:
+  - name: projects
+    description: Every information about the projects
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+  - name: users
+    description: Information about the users
+  - name: tasks
+    description: Operation of tasks and how to access them
+paths:
+  /projects:
+    put:
+      tags:
+        - projects
+      summary: Get all the information of a project
+      description: Get all the information of a project
+      operationId: updatePet
+      requestBody:
+        description: Update an existent pet in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pet'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Pet not found
+        '405':
+          description: Validation exception
+      security:
+        - petstore_auth:
+            - write:pets
+            - read:pets
+  /projects/{projectId}:
+    get:
+      tags:
+        - projects
+      summary: Finds Pets by status
+      description: Multiple status values can be provided with comma separated strings
+      operationId: findPetsByStatus
+      parameters:
+        - name: status
+          in: query
+          description: Status values that need to be considered for filter
+          required: false
+          explode: true
+          schema:
+            type: string
+            default: available
+            enum:
+              - available
+              - pending
+              - sold
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+        '400':
+          description: Invalid status value
+      security:
+        - petstore_auth:
+            - write:pets
+            - read:pets
+  /users:
+    put:
+      tags:
+        - users
+      summary: List of users
+      description: Get the list of all the users, sorted by firstName ascending
+      operationId: getUsers
+      requestBody:
+        description: Get all the users information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Pet'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        # '400':
+        #   description: Invalid ID supplied
+        # '404':
+        #   description: Pet not found
+        # '405':
+        #   description: Validation exception
+      security:
+        - petstore_auth:
+            - write:pets
+            - read:pets
+components:
+  schemas:
+    User:
+      type: object
+      unique: username
+      properties:
+        id:
+          type: string
+          example: 63442662c073e
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        username:
+          type: string
+          example: johndoe
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100000
+        username:
+          type: string
+          example: fehguy
+        address:
+          type: array
+          xml:
+            name: addresses
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Address'
+      xml:
+        name: customer
+  securitySchemes:
+    petstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
