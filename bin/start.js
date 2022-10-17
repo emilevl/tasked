@@ -7,14 +7,14 @@
 import app from "../app.js";
 import createDebugger from "debug";
 import http from "http";
+import * as config from '../config.js';
 
 const debug = createDebugger('tasked:server')
 /**
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
+app.set("port", config.port);
 
 /**
  * Create HTTP server.
@@ -26,7 +26,7 @@ const server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(config.port);
 server.on("error", onError);
 server.on("listening", onListening);
 
