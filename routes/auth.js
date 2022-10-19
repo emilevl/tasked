@@ -16,11 +16,13 @@ router.post('/login', async (req, res, next) => {
 
     const password = req.body.password;
     const passwordHash = user.passwordHash;
+    const userRole = user.role;
     const valid = await bcrypt.compare(password, passwordHash);
     if (valid) {
       const subject = user._id;
       const expiresIn = '7 days';
-      jwt.sign({ sub: subject }, config.secretKey, { expiresIn }, (err, token) => {
+      const scope = userRole;
+      jwt.sign({ sub: subject, scope }, config.secretKey, { expiresIn }, (err, token) => {
         if (err) {
           next(err);
         } else {
@@ -53,6 +55,7 @@ export function authenticate(req, res, next) {
         }
 
     req.userId = payload.sub;
+    req.role = payload.scope;
     // TODO: On pourrait récupérer les informations de l'utilisateur connecté
     // User.findById(payload.sub);
     next();

@@ -8,14 +8,34 @@ const ObjectId = mongoose.Types.ObjectId;
 
 usersRouter.get("/", authenticate, function (req, res, next) {
   // usersRouter.get("/", function (req, res, next) {
-  User.find().sort('firstName').exec(function(err, users) {
-    if (err) {
-      console.log(err);
-      return next(err);
+    // const authorized = req.role.includes("admin") || req.userId === thing.user.toString();
+    const authorized = req.role.includes("admin");
+    if (!authorized) {
+      return res.status(403).send("Please mind your own things.")
     }
 
-    res.send(users);
-  });
+    const filters = req.query;
+    // console.log(req.query.username);
+    User.find().sort('firstName').exec(function(err, users) {
+      if (err) {
+        console.log(err);
+        return next(err);
+      }
+      const filteredUsers = users.filter(user => {
+        let isValid = true;
+        for (const key in filters) {
+          // console.log(key, user[key], filters[key]);
+          if (key==='id') {
+            isValid = isValid && user[key] == filters[key];
+          }else {
+            const regex = new RegExp(`^${filters[key]}`);
+            isValid = isValid && user[key].toLowerCase().match(regex);
+          }
+        }
+        return isValid;
+      });
+      res.send(filteredUsers);
+    });
 });
 
 /* POST create a new user */
@@ -33,7 +53,13 @@ usersRouter.post('/', function(req, res, next) {
 });
 
 // TODO: improve the delete all (authentication, role...)
-usersRouter.delete('/all', function (req,res,next) {
+usersRouter.delete('/all', authenticate, function (req,res,next) {
+  
+  const authorized = req.role.includes("admin");
+    if (!authorized) {
+      return res.status(403).send("Please mind your own things.")
+    }
+
   User.collection.drop(function (err) {
     if (err) {
       return next(err);
@@ -42,8 +68,12 @@ usersRouter.delete('/all', function (req,res,next) {
     res.sendStatus(204);
   })
 });
-usersRouter.delete('/:id', loadUserFromParamsMiddleware, function (req, res, next) {
-  
+
+usersRouter.delete('/:id', authenticate, loadUserFromParamsMiddleware, function (req, res, next) {
+  const authorized = req.role.includes("admin");
+  if (!authorized) {
+    return res.status(403).send("Please mind your own things.")
+  }
   req.user.remove(function (err) {
     if (err) {
       return next(err);

@@ -30,12 +30,19 @@ const userSchema = new Schema({
     minlength: [ 8, 'password is too short' ],
     maxlength: 20
   },
+  //Roles: admin have all rights. editors can create and edit projects. Users can create tasks and edit them.
+  role: {
+    type: String,
+    enum: [ 'admin', 'editor', 'user'],
+    default: 'user'
+  },
 });
 
 userSchema.virtual('password');
 
 userSchema.pre('save', async function() {
   const passwordHash = await bcrypt.hash(this.password, 10)
+  this.username = this.username.toLowerCase()
   this.passwordHash = passwordHash;
 })
 
