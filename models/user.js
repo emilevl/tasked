@@ -36,6 +36,14 @@ const userSchema = new Schema({
     enum: [ 'admin', 'editor', 'user'],
     default: 'user'
   },
+  tasks: {
+    type: Schema.Types.ObjectId,
+    ref: "Task",
+  },
+  projects: {
+    type: Schema.Types.ObjectId,
+    ref: "Project"
+  }
 });
 
 userSchema.virtual('password');

@@ -4,8 +4,7 @@
   const taskSchema = new Schema({
     name: String,
     startDate: { type: Date, default: Date.now  },
-    endDate: { type: Date, default: Date.now  },
-    duration: Number,
+    endDate: { type: Date},
     description: {
       type: String, // Type validation
       maxlength: 200 // Maximum length
@@ -19,6 +18,18 @@
       ref: 'Project'
     }
   });
+
+
+  taskSchema.set("toJSON", {
+    transform: transformJsonUser
+  });
+
+  function transformJsonUser(doc, json, options) {
+    json.id = json._id;
+    delete json._id;
+    delete json.__v;
+    return json;
+  }
 
   taskSchema.index({ startDate: 1, name: 1 });
 
