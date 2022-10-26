@@ -1,8 +1,12 @@
 import express from "express";
 import Task from "../models/task.js"
+import Project from "../models/project.js"
+import mongoose from 'mongoose';
 import { authenticate } from "./auth.js";
+import { paginate } from "./utils.js";
 
 const tasksRouter = express.Router();
+const ObjectId = mongoose.Types.ObjectId;
 
 
 tasksRouter.get("/", authenticate, function (req, res, next) {
@@ -13,7 +17,7 @@ tasksRouter.get("/", authenticate, function (req, res, next) {
 
     const filters = req.query;
     // get all the tasks and the infos of the user who created it.
-    Task.find().sort('name').populate("user").exec(function(err, tasks) {
+    Task.find().sort('name').populate("user").populate("project").exec(function(err, tasks) {
       if (err) {
         console.log(err);
         return next(err);
@@ -48,6 +52,17 @@ tasksRouter.post("/", authenticate, function (req, res, next) {
   // console.log(req.userId);
 
   newTask.save(function(err, savedTask) {
+
+    Project.findById(req.body.project, function(err, project) {
+      if (err) return res.send(err);
+      console.log(project);
+      project.tasks.push(savedTask._id);
+      project.save(function(err) {
+        if (err) return res.send(err);
+        // res.json({ status : 'done' });
+      });
+    });
+
     if (err) {
       return next(err);
     }
@@ -57,8 +72,20 @@ tasksRouter.post("/", authenticate, function (req, res, next) {
 });
 
 tasksRouter.get("/:id", function (req, res, next) {
-  const book = { title: "Fahrenheit 451", year: 1953, author: "Ray Bradburry" };
-  res.send(book);
+  const taskId = req.params.id;
+  if (!ObjectId.isValid(taskId)) {
+    return taskNotFound(res, taskId);
+  }
+  
+  Task.findById(taskId, function (err, task) {
+    if (err) {
+      return next(err);
+    } else if (!task) {
+      return taskNotFound(res, taskId);
+    }
+    
+    res.send(task);
+  });
 });
 
 
@@ -120,4 +147,11 @@ tasksRouter.patch('/:id', authenticate, function (req,res,next) {
       });
     });
 });
+
+/**
+ * Responds with 404 Not Found and a message indicating that the task with the specified ID was not found.
+ */
+ function taskNotFound(res, taskId) {
+  return res.status(404).type('text').send(`No task found with ID ${taskId}`);
+}
 export default tasksRouter;
