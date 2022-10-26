@@ -12,11 +12,8 @@ info:
   termsOfService: http://swagger.io/terms/
   # TODO: Voir ce qu'il y a à garder
   contact:
-    - email: emile.vianney-liaud@heig-vd.ch
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  version: 1.0.11
+    email: emile.vianney-liaud@heig-vd.ch
+  version: 1.0.0
 externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
@@ -26,74 +23,24 @@ servers:
 tags:
   - name: projects
     description: Every information about the projects
-    externalDocs:
-      description: Find out more
-      url: http://swagger.io
   - name: users
     description: Information about the users
   - name: tasks
     description: Operation of tasks and how to access them
 paths:
-  /projects:
-    put:
-      tags:
-        - projects
-      summary: Get all the information of a project
-      description: Get all the information of a project
-      operationId: updatePet
-      requestBody:
-        description: Update an existent pet in the store
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Pet'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/Pet'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Pet'
-        required: true
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Pet'          
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Pet'
-        '400':
-          description: Invalid ID supplied
-        '404':
-          description: Pet not found
-        '405':
-          description: Validation exception
-      security:
-        - petstore_auth:
-            - write:pets
-            - read:pets
   /projects/{projectId}:
     get:
+      description: With the id as a param, it will retrieve the specific project
       tags:
         - projects
-      summary: Finds Pets by status
-      description: Multiple status values can be provided with comma separated strings
-      operationId: findPetsByStatus
+      summary: Retrieve a specific project
       parameters:
-        - name: status
-          in: query
-          description: Status values that need to be considered for filter
-          required: false
-          explode: true
+        - name: projectId
+          in: path
+          required: true
+          description: Id of the project to retrieve
           schema:
             type: string
-            default: available
-            enum:
-              - available
-              - pending
-              - sold
       responses:
         '200':
           description: successful operation
@@ -102,20 +49,22 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Pet'          
+                  $ref: '#/components/schemas/Project'          
             application/xml:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Pet'
-        '400':
-          description: Invalid status value
+                  $ref: '#/components/schemas/Project'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
       security:
-        - petstore_auth:
-            - write:pets
-            - read:pets
+        - user_auth:
+            - write:admin
+            - read:user
   /users:
-    put:
+    get:
       tags:
         - users
       summary: List of users
@@ -126,13 +75,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Pet'
+              $ref: '#/components/schemas/User'
           application/xml:
             schema:
-              $ref: '#/components/schemas/Pet'
+              $ref: '#/components/schemas/User'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Pet'
+              $ref: '#/components/schemas/User'
         required: true
       responses:
         '200':
@@ -140,25 +89,61 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pet'          
+                $ref: '#/components/schemas/User'          
             application/xml:
               schema:
-                $ref: '#/components/schemas/Pet'
-        # '400':
-        #   description: Invalid ID supplied
-        # '404':
-        #   description: Pet not found
-        # '405':
-        #   description: Validation exception
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
       security:
-        - petstore_auth:
-            - write:pets
-            - read:pets
+        - user_auth:
+            - write:admin
+            - read:user
+  /tasks:
+    get:
+      tags:
+        - tasks
+      summary: List of tasks
+      description: Get the list of all the tasks, sorted by name ascending
+      operationId: getTasks
+      requestBody:
+        description: Get all the tasks information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin
+            - read:user
+
 components:
   schemas:
     User:
       type: object
-      unique: username
       properties:
         id:
           type: string
@@ -172,34 +157,77 @@ components:
         username:
           type: string
           example: johndoe
-    Customer:
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+            description: All the tasks belonging the user
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+            description: All the projects belonging the user
+    Project:
+      type: object
+      properties:
+        _id:
+          type: integer
+          format: int64
+          example: 5604f32
+        name:
+          type: string
+          example: My new app
+        active:
+          type: boolean
+        description:
+          type: string
+        company:
+          type: string
+        author:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+            description: Author of the project (user)
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+            description: All the tasks belonging the project
+    Task:
       type: object
       properties:
         id:
           type: integer
           format: int64
-          example: 100000
-        username:
+          example: 5604f32
+        name:
           type: string
-          example: fehguy
-        address:
+          example: My task created
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+          example: "2022-10-19T13:20:11.686Z"
+        endDate:
+          format: date-time
+          example: "2022-10-19T14:30:11.686Z"
+        user:
           type: array
-          xml:
-            name: addresses
-            wrapped: true
           items:
-            $ref: '#/components/schemas/Address'
-      xml:
-        name: customer
+            $ref: "#/components/schemas/User"
+            description: User who created the task
+        project:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+            description: The project of the task
   securitySchemes:
-    petstore_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
-          scopes:
-            write:pets: modify pets in your account
-            read:pets: read your pets
+    user_auth:
+      type: http
+      description: L'utilisateur doit se connecter pour effectuer des tâches
+      scheme: bearer
+      bearerFormat: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MzRmZDlmZWUyOGMxZDExYzMzMTlmY2UiLCJzY29wZSI6InVzZXIiLCJpYXQiOjE2NjYxODYxMzAsImV4cCI6MTY2Njc5MDkzMH0.06h-L09jS0_rNfQXwCIIcYWBo7zwtSIGz24X0Xmue6A"
     api_key:
       type: apiKey
       name: api_key
