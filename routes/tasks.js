@@ -3,7 +3,7 @@ import Task from "../models/task.js"
 import Project from "../models/project.js"
 import mongoose from 'mongoose';
 import { authenticate } from "./auth.js";
-import { paginate } from "./utils.js";
+// import { paginate } from "./utils.js";
 
 const tasksRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
@@ -32,7 +32,7 @@ tasksRouter.get("/", authenticate, function (req, res, next) {
           }else if (key === 'user'){
             const regex = new RegExp(`^${filters[key]}`);
             isValid = isValid && task.user.username.toLowerCase().match(regex);
-          } else {
+          } else if(key) {
             const regex = new RegExp(`${filters[key]}`);
             isValid = isValid && task[key].toLowerCase().match(regex);
           }
