@@ -8,6 +8,7 @@ import logger from "morgan";
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
 import tasksRouter from "./routes/tasks.js";
+import NfcRouter from "./routes/nfc.js";
 import projectsRouter from "./routes/projects.js";
 import authRouter from "./routes/auth.js";
 
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/tasks", tasksRouter);
 app.use("/projects", projectsRouter);
 app.use("/users", usersRouter);
+app.use("/nfc", NfcRouter);
 app.use("/auth", authRouter);
 
 app.use("/", indexRouter);
