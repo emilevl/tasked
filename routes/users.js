@@ -2,6 +2,7 @@ import express from "express";
 import User from "../models/user.js"
 import mongoose from 'mongoose';
 import { authenticate } from "./auth.js";
+import * as utils from "./utils.js";
 
 const usersRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
@@ -13,29 +14,85 @@ usersRouter.get("/", authenticate, function (req, res, next) {
     if (!authorized) {
       return res.status(403).send("Please mind your own things.")
     }
+    const countQuery = queryUser(req);
+  countQuery.countDocuments(function (err, total) {
+    if (err) {
+      return next(err);
+    }
 
-    const filters = req.query;
-    // console.log(req.query.username);
-    User.find().sort('firstName').exec(function(err, users) {
-      if (err) {
-        console.log(err);
-        return next(err);
-      }
-      const filteredUsers = users.filter(user => {
-        let isValid = true;
-        for (const key in filters) {
-          // console.log(key, user[key], filters[key]);
-          if (key==='id') {
-            isValid = isValid && user[key] == filters[key];
-          }else {
-            const regex = new RegExp(`^${filters[key]}`);
-            isValid = isValid && user[key].toLowerCase().match(regex);
+    // Parse pagination parameters from URL query parameters.
+    const { page, pageSize } = utils.getPaginationParameters(req);
+
+    User.aggregate(
+      [
+        {
+          $lookup: {
+            from: 'tasks',
+            localField: '_id',
+            foreignField: 'user',
+            as: 'tasksdone'
           }
+        },
+        {
+          $unwind: {
+            path: '$tasksdone',
+            // Preserve users who didn't created a task yet.
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $addFields: {
+            tasksdone: {
+              $cond: {
+                if: '$tasksdone',
+                then: 1,
+                else: 0
+              }
+            }
+          }
+        },
+        {
+          $group: {
+            _id: '$_id',
+            firstName: { $first: '$firstName' },
+            lastName: { $first: '$lastName' },
+            username: { $first: '$username' },
+            tasksdone: {$sum: '$tasksdone'}
+          }
+        },
+        {
+          $sort: {
+            username: 1
+          }
+        },
+        {
+          $skip: (page - 1) * pageSize
+        },
+        {
+          $limit: pageSize
         }
-        return isValid;
-      });
-      res.send(filteredUsers);
-    });
+      ],
+      (err, users) => {
+        if (err) {
+          return next(err);
+        }
+
+        utils.addLinkHeader('/users', page, pageSize, total, res);
+        // res.send(users);
+        res.send(
+          users.map(user => {
+            // Transform the aggregated object into a Mongoose model.
+            const serialized = new User(user).toJSON();
+
+            // Add the aggregated property.
+            serialized.tasksdone = user.tasksdone;
+
+            return serialized;
+          })
+        );
+      }
+    );
+  });
 });
 
 /* POST create a new user */
@@ -120,6 +177,33 @@ function loadUserFromParamsMiddleware(req, res, next) {
     req.user = user;
     next();
   });
+}
+
+/**
+ * Returns a Mongoose query that will retrieve users filtered with the URL query parameters.
+ */
+ function queryUser(req) {
+  
+  let query = User.find();
+
+  if (typeof req.query.id == 'string') {
+    query = query.where('_id').equals(req.query.id);
+  }
+  if (typeof req.query.username == 'string') {
+    query = query.where('username').equals(req.query.username);
+  }
+  if (typeof req.query.firstName == 'string') {
+    query = query.where('name').equals(req.query.firstName);
+  }
+
+  return query;
+}
+
+/**
+ * Responds with 404 Not Found and a message indicating that the user with the specified ID was not found.
+ */
+ function userNotFound(res, userId) {
+  return res.status(404).type('text').send(`No user found with ID ${userId}`);
 }
 
 export default usersRouter;
