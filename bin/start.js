@@ -8,6 +8,7 @@ import app from "../app.js";
 import createDebugger from "debug";
 import http from "http";
 import * as config from '../config.js';
+import { createWebSocketServer } from '../ws.js';
 
 const debug = createDebugger('tasked:server')
 /**
@@ -21,6 +22,7 @@ app.set("port", config.port);
  */
 
 const server = http.createServer(app);
+createWebSocketServer(server);
 
 /**
  * Listen on provided port, on all network interfaces.

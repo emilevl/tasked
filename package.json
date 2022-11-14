@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "start": "node ./bin/start",
-    "test": "cross-env LOCAL_MONGODB_URI=mongodb://127.0.0.1/tasked-test node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
+    "test": "cross-env LOCAL_MONGODB_URI=mongodb://127.0.0.1/tasked-test node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
@@ -19,7 +19,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.6.5",
     "morgan": "~1.10.0",
-    "swagger-ui-express": "^4.5.0"
+    "swagger-ui-express": "^4.5.0",
+    "ws": "^8.11.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

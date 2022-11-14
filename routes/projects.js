@@ -2,6 +2,7 @@ import express from "express";
 import Project from "../models/project.js"
 import mongoose from 'mongoose';
 import { authenticate } from "./auth.js";
+import { broadcastMessage } from '../ws.js';
 
 const projectsRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
@@ -75,6 +76,13 @@ projectsRouter.post("/", authenticate, function (req, res, next) {
     }
     // Send the saved document in the response
     res.send(savedProject);
+
+    broadcastMessage({message:{
+        event: "projectCreated",
+        name: savedProject.name,
+        data: ""
+      } 
+    });
   });
 });
 
@@ -118,6 +126,12 @@ projectsRouter.patch('/:id', authenticate, function (req,res,next) {
           return res.status(404).send();
         }
         res.send(project);
+        broadcastMessage({message:{
+          event: "projectUpdated",
+          name: project.name,
+          data: project
+          }
+        });
       }).catch((error) => {
         res.status(500).send(error);
       });
@@ -134,11 +148,17 @@ projectsRouter.get('/:id/toggleactivity', authenticate, function (req,res,next) 
       if (!authorized) {
         return res.status(403).send("Please mind your own things.")
       }
-      Project.findByIdAndUpdate(req.params.id, toggleActivity(project), {new: true}).then((project) => {
+      Project.findByIdAndUpdate(req.params.id, {active: !project.active}, {new: true}).then((project) => {
         if (!project) {
           return res.status(404).send();
         }
         res.send(project);
+        broadcastMessage({message:{
+          event: "projectToggled",
+          name: project.name,
+          data: project.active
+          } 
+        });
       }).catch((error) => {
         res.status(500).send(error);
       });
