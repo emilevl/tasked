@@ -9,6 +9,7 @@ import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
 import tasksRouter from "./routes/tasks.js";
 import NfcRouter from "./routes/nfc.js";
+import ImageRouter from "./routes/images.js";
 import projectsRouter from "./routes/projects.js";
 import authRouter from "./routes/auth.js";
 
@@ -34,6 +35,7 @@ app.use("/tasks", tasksRouter);
 app.use("/projects", projectsRouter);
 app.use("/users", usersRouter);
 app.use("/nfc", NfcRouter);
+app.use("/images", ImageRouter);
 app.use("/auth", authRouter);
 
 app.use("/", indexRouter);
