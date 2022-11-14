@@ -10,7 +10,7 @@ const ObjectId = mongoose.Types.ObjectId;
 
 
 tasksRouter.get("/", authenticate, function (req, res, next) {
-  const authorized = req.role.includes("user");
+  const authorized = req.role.includes("user") || req.role.includes("editor") || req.role.includes("admin");
     if (!authorized) {
       return res.status(403).send("Please mind your own things.")
     }
@@ -125,6 +125,29 @@ tasksRouter.delete('/:id', authenticate, function (req,res,next) {
   });
 });
 
+tasksRouter.post('/end/:id', authenticate, function (req,res,next) {
+  Task.findById(req.params.id).exec(function(err, task) {
+    if (err) {
+      return next(err);
+    }
+    const authorized = req.userId === task.user.toString();
+      if (!authorized) {
+        return res.status(403).send("Please mind your own things.")
+      }
+
+      const dataToUpdate = {endDate: Date.now()};
+    
+      Task.findByIdAndUpdate(req.params.id, dataToUpdate, {new: true}).then((task) => {
+        if (!task) {
+          return res.status(404).send();
+        }
+        res.send(task);
+      }).catch((error) => {
+        res.status(500).send(error);
+      });
+    });
+});
+
 tasksRouter.patch('/:id', authenticate, function (req,res,next) {
   Task.findById(req.params.id).exec(function(err, task) {
     if (err) {
@@ -136,7 +159,6 @@ tasksRouter.patch('/:id', authenticate, function (req,res,next) {
         return res.status(403).send("Please mind your own things.")
       }
       
-      console.log(req.params.id)
       Task.findByIdAndUpdate(req.params.id, req.body, {new: true}).then((task) => {
         if (!task) {
           return res.status(404).send();
