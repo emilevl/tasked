@@ -7,9 +7,9 @@ import * as utils from "./utils.js";
 const usersRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
 
+// Only admins can access the users in any way
+
 usersRouter.get("/", authenticate, function (req, res, next) {
-  // usersRouter.get("/", function (req, res, next) {
-    // const authorized = req.role.includes("admin") || req.userId === thing.user.toString();
     const authorized = req.role.includes("admin");
     if (!authorized) {
       return res.status(403).send("Please mind your own things.")
@@ -23,6 +23,7 @@ usersRouter.get("/", authenticate, function (req, res, next) {
     // Parse pagination parameters from URL query parameters.
     const { page, pageSize } = utils.getPaginationParameters(req);
 
+    // Count the number of tasks done for each users
     User.aggregate(
       [
         {
@@ -109,6 +110,30 @@ usersRouter.post('/', function(req, res, next) {
   });
 });
 
+/* PATCH edit a user */
+usersRouter.patch('/:id', authenticate, function (req,res,next) {
+  User.findById(req.params.id).exec(function(err, task) {
+    if (err) {
+      return next(err);
+    }
+  });
+
+  // Only the admin can edit a user's information
+  const authorized = req.role.includes("admin");
+    if (!authorized) {
+      return res.status(403).send("Please mind your own things.")
+    }
+    
+    User.findByIdAndUpdate(req.params.id, req.body, {new: true}).then((user) => {
+      if (!user) {
+        return res.status(404).send();
+      }
+      res.send(user);
+    }).catch((error) => {
+      res.status(500).send(error);
+    });
+});
+
 // TODO: improve the delete all (authentication, role...)
 usersRouter.delete('/all', authenticate, function (req,res,next) {
   
@@ -138,6 +163,7 @@ usersRouter.delete('/:id', authenticate, loadUserFromParamsMiddleware, function 
 
     res.sendStatus(204);
   });
+  //TODO: supprimer cette partie ? 
   // Check if a movie exists before deleting
   // Movie.findOne({ directorId: req.user._id }).exec(function (err, movie) {
   //   if (err) {
@@ -181,6 +207,7 @@ function loadUserFromParamsMiddleware(req, res, next) {
 
 /**
  * Returns a Mongoose query that will retrieve users filtered with the URL query parameters.
+ * TODO: supprimer cette partie là ?
  */
  function queryUser(req) {
   
