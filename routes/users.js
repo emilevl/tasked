@@ -58,6 +58,7 @@ usersRouter.get("/", authenticate, function (req, res, next) {
             firstName: { $first: '$firstName' },
             lastName: { $first: '$lastName' },
             username: { $first: '$username' },
+            role: {$first: '$role'},
             tasksdone: {$sum: '$tasksdone'}
           }
         },
