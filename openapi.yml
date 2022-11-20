@@ -10,12 +10,10 @@ info:
     - [Projet github "tasked"](https://github.com/emilevl/tasked)
     - [API Specification](https://swagger.io/specification/)
   termsOfService: http://swagger.io/terms/
-  # TODO: Voir ce qu'il y a à garder
   version: 1.0.0
 externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
-  # TODO: Compléter nom du serveur
 servers:
   - url: https://tasked.onrender.com/
   - url: http://localhost:3000/
@@ -270,6 +268,34 @@ paths:
       security:
         - user_auth:
             - delete:admin
+  /auth/login:
+    post:
+      tags:
+        - users
+      summary: Authenticate
+      description: Authenticate to the server
+      operationId: authenticate
+      requestBody:
+        description: Send the user and password (The user must exist in the collection first)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAuthenticate'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAuthenticated'
+        '401':
+          description: Unauthorized - Bad login
+        '404':
+          description: Id Not found
+        '500':
+          description: Internal Server Error
+          
   /tasks:
     get:
       parameters: 
@@ -933,6 +959,25 @@ components:
         project:
           type: string
           description: The project related to the image
+    UserAuthenticated:
+      type: object
+      properties:
+        token: 
+          type: string
+          description: token of the authenticated User
+    UserAuthenticate:
+      type: object
+      properties: 
+        username:
+          type: string
+          description: existing user in the collection
+        password: 
+          type: string
+      required: 
+        - username
+        - password
+      
+
   parameters:
     pageParam:
       name: page
