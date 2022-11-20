@@ -97,7 +97,7 @@ usersRouter.get("/", authenticate, function (req, res, next) {
 });
 
 /* POST create a new user */
-usersRouter.post('/', function(req, res, next) {
+usersRouter.post('/', authenticate, function(req, res, next) {
   // Only admins can create a user
   const authorized = req.role.includes("admin");
     if (!authorized) {
@@ -112,6 +112,27 @@ usersRouter.post('/', function(req, res, next) {
     }
     // Send the saved document in the response
     res.send(savedUser);
+  });
+});
+
+/* POST register as a new user */
+usersRouter.post('/register', function(req, res, next) {
+
+  // Create a new document from the JSON in the request body
+  const user = {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    username: req.body.username,
+    password: req.body.password
+  }
+  const newUser = new User(user);
+  // Save that document
+  newUser.save(function(err, savedUser) {
+    if (err) {
+      return next(err);
+    }
+    // Send the saved document in the response
+    res.send({message: "User successfuly created !", savedUser});
   });
 });
 
