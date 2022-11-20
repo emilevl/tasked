@@ -98,6 +98,11 @@ usersRouter.get("/", authenticate, function (req, res, next) {
 
 /* POST create a new user */
 usersRouter.post('/', function(req, res, next) {
+  // Only admins can create a user
+  const authorized = req.role.includes("admin");
+    if (!authorized) {
+      return res.status(403).send("Please mind your own things.")
+    }
   // Create a new document from the JSON in the request body
   const newUser = new User(req.body);
   // Save that document
