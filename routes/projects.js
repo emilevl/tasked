@@ -74,12 +74,12 @@ projectsRouter.post("/", authenticate, function (req, res, next) {
     // Send the saved document in the response
     res.send(savedProject);
 
-    broadcastMessage({message:{
-        event: "projectCreated",
-        name: savedProject.name,
-        data: ""
-      } 
-    });
+    // broadcastMessage({message:{
+    //     event: "projectCreated",
+    //     name: savedProject.name,
+    //     data: ""
+    //   } 
+    // });
   });
 });
 
