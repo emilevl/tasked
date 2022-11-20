@@ -56,8 +56,6 @@ export function authenticate(req, res, next) {
 
     req.userId = payload.sub;
     req.role = payload.scope;
-    // TODO: On pourrait récupérer les informations de l'utilisateur connecté
-    // User.findById(payload.sub);
     next();
   });
 }

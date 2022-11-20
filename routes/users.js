@@ -134,22 +134,22 @@ usersRouter.patch('/:id', authenticate, function (req,res,next) {
     });
 });
 
-// TODO: improve the delete all (authentication, role...)
-usersRouter.delete('/all', authenticate, function (req,res,next) {
+// Router to delete all users. Dev purpose only.
+// usersRouter.delete('/all', authenticate, function (req,res,next) {
   
-  const authorized = req.role.includes("admin");
-    if (!authorized) {
-      return res.status(403).send("Please mind your own things.")
-    }
+//   const authorized = req.role.includes("admin");
+//     if (!authorized) {
+//       return res.status(403).send("Please mind your own things.")
+//     }
 
-  User.collection.drop(function (err) {
-    if (err) {
-      return next(err);
-    }
+//   User.collection.drop(function (err) {
+//     if (err) {
+//       return next(err);
+//     }
 
-    res.sendStatus(204);
-  })
-});
+//     res.sendStatus(204);
+//   })
+// });
 
 usersRouter.delete('/:id', authenticate, loadUserFromParamsMiddleware, function (req, res, next) {
   const authorized = req.role.includes("admin");
@@ -163,28 +163,6 @@ usersRouter.delete('/:id', authenticate, loadUserFromParamsMiddleware, function 
 
     res.sendStatus(204);
   });
-  //TODO: supprimer cette partie ? 
-  // Check if a movie exists before deleting
-  // Movie.findOne({ directorId: req.user._id }).exec(function (err, movie) {
-  //   if (err) {
-  //     return next(err);
-  //   } else if (movie) {
-  //     // Do not delete if any movie is directed by this user
-  //     return res
-  //       .status(409)
-  //       .type('text')
-  //       .send(`Cannot delete user ${req.user.name} because movies are directed by them`);
-  //   }
-
-  //   req.user.remove(function (err) {
-  //     if (err) {
-  //       return next(err);
-  //     }
-
-  //     debug(`Deleted user "${req.user.name}"`);
-  //     res.sendStatus(204);
-  //   });
-  // });
 });
 
 function loadUserFromParamsMiddleware(req, res, next) {
@@ -207,7 +185,6 @@ function loadUserFromParamsMiddleware(req, res, next) {
 
 /**
  * Returns a Mongoose query that will retrieve users filtered with the URL query parameters.
- * TODO: supprimer cette partie là ?
  */
  function queryUser(req) {
   

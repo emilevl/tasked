@@ -2,10 +2,19 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 // Define the schema for projects
 const projectSchema = new Schema({
-  name: String,
-  active: Boolean, // If the project is not active: cannot add tasks on it.
+  name: {
+    type: String,
+    required: true,
+  },
+  active: {
+    type: Boolean,
+    default: true
+  }, // If the project is not active: cannot add tasks on it.
   description: String,
-  company: String,
+  company:  {
+    type: String,
+    required: true,
+  },
   tasks: [{
     type: Schema.Types.ObjectId,
     ref: "Task"
@@ -18,7 +27,6 @@ const projectSchema = new Schema({
 
 projectSchema.pre('remove', async function() {
   console.log(this.tasks);
-  console.log("HELOOOO");
 })
 
 // Create the model from the schema and export it

@@ -19,22 +19,20 @@ tasksRouter.get("/", authenticate, function (req, res, next) {
     // get all the tasks and the infos of the user who created it.
     Task.find().sort('name').populate("user").populate("project").exec(function(err, tasks) {
       if (err) {
-        console.log(err);
         return next(err);
       }
 
       const filteredTasks = tasks.filter(task => {
         let isValid = true;
         for (const key in filters) {
-          // console.log(key, task[key], filters[key]);
           if (key==='id') {
             isValid = isValid && task[key] == filters[key];
           }else if (key === 'user'){
             const regex = new RegExp(`^${filters[key]}`);
             isValid = isValid && task.user.username.toLowerCase().match(regex);
-          } else if(key) {
+          } else if(key == 'project') {
             const regex = new RegExp(`${filters[key]}`);
-            isValid = isValid && task[key].toLowerCase().match(regex);
+            isValid = isValid && task.projects[0].name.toLowerCase().match(regex);
           }
         }
         return isValid;
@@ -49,13 +47,10 @@ tasksRouter.post("/", authenticate, function (req, res, next) {
   req.body.user = req.userId;
   const newTask = new Task(req.body);
   // Save that document
-  // console.log(req.userId);
-
   newTask.save(function(err, savedTask) {
 
     Project.findById(req.body.project, function(err, project) {
       if (err) return res.send(err);
-      console.log(project);
       project.tasks.push(savedTask._id);
       project.save(function(err) {
         if (err) return res.send(err);
@@ -115,7 +110,6 @@ tasksRouter.delete('/:id', authenticate, function (req,res,next) {
       return res.status(403).send("Please mind your own things.")
     }
 
-    console.log(req.params.id)
     Task.findOneAndDelete({ _id: req.params.id }, function (err) {
       if (err) {
         return next(err);
@@ -130,7 +124,7 @@ tasksRouter.post('/end/:id', authenticate, function (req,res,next) {
     if (err) {
       return next(err);
     }
-    const authorized = req.userId === task.user.toString();
+    const authorized = req.role.includes("admin") ||  req.userId === task.user.toString();
       if (!authorized) {
         return res.status(403).send("Please mind your own things.")
       }

@@ -23,7 +23,6 @@ const userSchema = new Schema({
     maxlength: 20,
     unique: true
   },
-  // TODO: Change type of password ? 
   passwordHash: {
     type: String,
     // required: true,

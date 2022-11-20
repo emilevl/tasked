@@ -3,8 +3,13 @@
   // Define the schema for the tasks
   const taskSchema = new Schema({
     name: String,
-    startDate: { type: Date, default: Date.now  },
-    endDate: { type: Date},
+    startDate: { 
+      type: Date,
+      default: Date.now()
+    },
+    endDate: {
+      type: Date
+    },
     description: {
       type: String, // Type validation
       maxlength: 200 // Maximum length

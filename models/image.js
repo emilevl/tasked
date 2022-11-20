@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
-// Define the schema for nfcs
+
 
 const imageSchema = new Schema({
     name: {

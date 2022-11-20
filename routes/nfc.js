@@ -7,14 +7,12 @@ import { authenticate } from "./auth.js";
 const NfcRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
 
-//TODO: filter by project name
 NfcRouter.get("/", authenticate, function (req, res, next) {
 
     const authorized = req.role.includes("admin") ||  req.role.includes("editor");
-    // get all the project and the infos of the user who created it.
+    // get all the Nfc
     Nfc.find().populate("project").exec(function(err, nfc) {
       if (err) {
-        console.log(err);
         return next(err);
       }
       res.send(nfc);
@@ -52,7 +50,6 @@ NfcRouter.post("/", authenticate, async function (req, res, next) {
 // req.body.author = req.userId;
   const newNfc = new Nfc(req.body);
   // Save that document
-  // console.log(req.userId);
 
   newNfc.save(function(err, savedNfc) {
     if (err) {
@@ -77,7 +74,6 @@ NfcRouter.delete("/:id", authenticate, function (req,res,next) {
       return res.status(403).send("Please mind your own things.")
     }
 
-    console.log(req.params.id)
     Nfc.findOneAndDelete({ codeNfc: req.params.id }, function (err) {
       if (err) {
         return next(err);

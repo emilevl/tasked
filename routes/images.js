@@ -7,30 +7,29 @@ import { authenticate } from "./auth.js";
 const ImageRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
 
-//TODO: filter by project name
 ImageRouter.get("/", authenticate, async function (req, res, next) {
 
     const authorized = req.role.includes("user") || req.role.includes("admin") ||  req.role.includes("editor");
     // get all the project and the infos of the user who created it.
         let query = Image.find();  
     if (req.query) {
+      if (typeof req.query.name == 'string') {
+            // query = query.where('name').equals(`/^${req.query.name}*/`);
+            query = Image.find({ name: new RegExp(req.query.name, 'i')})
+        }
         if (typeof req.query.id == 'string') {
             query = query.where('_id').equals(req.query.id);
         }
         if (typeof req.query.project == 'string') {
             query = query.where('project').equals(req.query.project);
         }
-        if (typeof req.query.name == 'string') {
-            // query = query.where('name').equals(`/^${req.query.name}*/`);
-            query = Image.find({ name: new RegExp(req.query.name, 'i')})
-        }
+        
     }
   
     // const allImages = await queryImage(req);
     // res.send(allImages);
     query.exec(function(err, images) {
       if (err) {
-        console.log(err);
         return next(err);
       }
       res.send(images);
@@ -55,9 +54,7 @@ ImageRouter.get("/:id", function (req, res, next) {
 
 
 ImageRouter.post("/", authenticate, async function (req, res, next) {
-  
-    // TODO: Seul un utilisateur se trouvant dans le projet pourrait ajouter une image ? 
-  // Only editors or admin can create a project
+
   const authorized = req.role.includes("user") || req.role.includes("admin") ||  req.role.includes("editor");
   if (!authorized) {
     return res.status(403).send("Please mind your own things.")
@@ -70,7 +67,6 @@ ImageRouter.post("/", authenticate, async function (req, res, next) {
   // req.body.author = req.userId;
   const newImage = new Image(req.body);
   // Save that document
-  // console.log(req.userId);
 
   newImage.save(function(err, savedImage) {
     if (err) {
@@ -95,7 +91,6 @@ ImageRouter.delete("/:id", authenticate, function (req,res,next) {
       return res.status(403).send("Please mind your own things.")
     }
 
-    console.log(req.params.id)
     Image.findOneAndDelete({ _id: req.params.id }, function (err) {
       if (err) {
         return next(err);
