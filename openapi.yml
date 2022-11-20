@@ -11,15 +11,14 @@ info:
     - [API Specification](https://swagger.io/specification/)
   termsOfService: http://swagger.io/terms/
   # TODO: Voir ce qu'il y a à garder
-  contact:
-    email: emile.vianney-liaud@heig-vd.ch
   version: 1.0.0
 externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
   # TODO: Compléter nom du serveur
 servers:
-  - url: https://tasked.onrender.com/api/
+  - url: https://tasked.onrender.com/
+  - url: http://localhost:3000/
 tags:
   - name: projects
     description: Every information about the projects
@@ -27,30 +26,75 @@ tags:
     description: Information about the users
   - name: tasks
     description: Operation of tasks and how to access them
+  - name: nfc
+    description: NFC's and the project related to each of them
+  - name: images
+    description: Images added to a project
 paths:
+  /projects:
+    get:
+      parameters: 
+        [
+          $ref: '#/components/parameters/usernameParam'
+        ]
+      tags:
+        - projects
+      summary: List of all projects
+      description: Get the list of all the projects, sorted by name ascending
+      operationId: getProjects
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - read:user
+    post:
+      tags:
+        - projects
+      summary: Create a project
+      description: Create a project with all information
+      operationId: createProject
+      requestBody:
+        description: Send all the project informations
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPost'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin|editor
   /projects/{projectId}:
+    parameters: [$ref: '#/components/parameters/projectParam']
     get:
       description: With the id as a param, it will retrieve the specific project
       tags:
         - projects
       summary: Retrieve a specific project
-      parameters:
-        - name: projectId
-          in: path
-          required: true
-          description: Id of the project to retrieve
-          schema:
-            type: string
       responses:
         '200':
           description: successful operation
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Project'          
-            application/xml:
               schema:
                 type: array
                 items:
@@ -61,36 +105,90 @@ paths:
           description: Id Not found
       security:
         - user_auth:
-            - write:admin
             - read:user
+    patch:
+      tags:
+        - projects
+      summary: Edit a project
+      description: Edit a project sending only the things to edit as an object
+      operationId: editProject
+      requestBody:
+        description: Send only the information that need to be edited
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPost'
+        required: true
+      responses:
+        '200':
+          description: Successful operation - return the whole project informations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin|editor|author
+    delete:
+      tags:
+        - projects
+      summary: Delete a project
+      description: Delete a projectd using its id.
+      operationId: deleteProject
+      responses:
+        '204':
+          description: Successful operation - No content returned
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - delete:admin|author
+  /projects/{projectId}/toggleactivity:
+    parameters: [$ref: '#/components/parameters/projectParam']
+    post:
+      description: Toggle the project's activity (false become true and true become false)
+      tags:
+        - projects
+      summary: Toggle the project's activity
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin|editor|author
   /users:
     get:
+      parameters: 
+        [
+          $ref: '#/components/parameters/pageParam',
+          $ref: '#/components/parameters/pageSizeParam'
+        ]
       tags:
         - users
       summary: List of users
       description: Get the list of all the users, sorted by firstName ascending
       operationId: getUsers
-      requestBody:
-        description: Get all the users information
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/User'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/User'
-        required: true
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/User'          
-            application/xml:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
@@ -99,27 +197,19 @@ paths:
           description: Id Not found
       security:
         - user_auth:
-            - write:admin
-            - read:user
-  /tasks:
-    get:
+            - read:admin
+    post:
       tags:
-        - tasks
-      summary: List of tasks
-      description: Get the list of all the tasks, sorted by name ascending
-      operationId: getTasks
+        - users
+      summary: Create a user
+      description: Create a user with all information
+      operationId: createUser
       requestBody:
-        description: Get all the tasks information
+        description: Send all the user informations
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Task'
-          application/xml:
-            schema:
-              $ref: '#/components/schemas/Task'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Task'
+              $ref: '#/components/schemas/UserPost'
         required: true
       responses:
         '200':
@@ -127,10 +217,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'          
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Task'
+                $ref: '#/components/schemas/UserResponse'
         '401':
           description: Unauthorized
         '404':
@@ -138,7 +225,374 @@ paths:
       security:
         - user_auth:
             - write:admin
+  /users/{idUser}:
+    parameters: [$ref: '#/components/parameters/idUserParam']
+    patch:
+      tags:
+        - users
+      summary: Edit a user
+      description: Edit a user sending only the things to edit as an object
+      operationId: editUser
+      requestBody:
+        description: Send only the information that need to be edited
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPost'
+        required: true
+      responses:
+        '200':
+          description: Successful operation - return the whole user informations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin
+    delete:
+      tags:
+        - users
+      summary: Delete a user
+      description: Delete a user using his id.
+      operationId: deleteUser
+      responses:
+        '204':
+          description: Successful operation - No content returned
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - delete:admin
+  /tasks:
+    get:
+      parameters: 
+        [
+          $ref: '#/components/parameters/usernameParam'
+        ]
+      tags:
+        - tasks
+      summary: List of tasks
+      description: Get the list of all the tasks, sorted by name ascending
+      operationId: getTasks
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized
+      security:
+        - user_auth:
             - read:user
+    post:
+      tags:
+        - tasks
+      summary: Create a task
+      description: Create a new task
+      operationId: createTask
+      requestBody:
+        description: Send all the information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskPost'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '401':
+          description: Unauthorized
+      security:
+        - user_auth:
+            - read:user
+  /tasks/{idTask}:
+    parameters: [$ref: '#/components/parameters/idTaskParam']
+    get:
+      tags:
+        - tasks
+      summary: A specific task
+      description: Get a specific task, using its id
+      operationId: getTask
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '401':
+          description: Unauthorized
+      security:
+        - user_auth:
+            - read:user
+    patch:
+      tags:
+        - tasks
+      summary: Edit a task
+      description: Edit a task sending only the info to edit
+      operationId: editTask
+      requestBody:
+        description: Send only the information that need to be edited
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskPatch'
+        required: true
+      responses:
+        '200':
+          description: Successful operation - return the whole task informations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin|author
+    delete:
+      tags:
+        - tasks
+      summary: Delete a task
+      description: Delete a task using its id.
+      operationId: deleteTask
+      responses:
+        '204':
+          description: Successful operation - No content returned
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - delete:admin|author
+  /tasks/end/{idTask}:
+    post:
+      tags:
+        - tasks
+      summary: End a task
+      description: End a specific task, using its id
+      operationId: endTask
+      requestBody:
+        description: OPTIONAL. If not specified, the current date and time will be used.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskEnd'
+        required: false
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreated'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin|user
+  /nfc:
+    get:
+      tags:
+        - nfc
+      summary: List of nfc
+      description: Get the list of all the nfc
+      operationId: getNfc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nfc'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Page not found
+      security:
+        - user_auth:
+            - read:admin|editor
+    post:
+      tags:
+        - nfc
+      summary: Create a new Nfc
+      description: Create a new Nfc and bind it with a project
+      operationId: createNfc
+      requestBody:
+        description: Sending all the info to create the NFC
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NfcPost'
+        required: false
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcCreated'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:admin|editor
+  /nfc/{idNfc}:
+    parameters: [$ref: '#/components/parameters/idNfcParam']
+    get:
+      tags:
+        - nfc
+      summary: Project of the Nfc
+      description: Get the project connected to the specified Nfc
+      operationId: getNfc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NfcProject'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Page not found
+      security:
+        - user_auth:
+            - read:admin|editor
+  /images:
+    get:
+      tags:
+        - images
+      summary: List of all images
+      description: Get the list of all the images
+      operationId: getImages
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - read:user
+    post:
+      tags:
+        - images
+      summary: Add a new image
+      description: Add a new image link
+      operationId: addImage
+      requestBody:
+        description: Send all the image information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImagePost'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:user
+  /images/{imagesId}:
+    parameters: [$ref: '#/components/parameters/imageParam']
+    get:
+      description: With the id as a param, it will retrieve the specific image
+      tags:
+        - images
+      summary: Retrieve a specific image
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Image'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - read:user
+    patch:
+      tags:
+        - images
+      summary: Edit an image
+      description: Edit an image sending only the things to edit as an object
+      operationId: editImage
+      requestBody:
+        description: Send only the information that need to be edited
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImagePost'
+        required: true
+      responses:
+        '200':
+          description: Successful operation - return the whole image informations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - write:user
+    delete:
+      tags:
+        - images
+      summary: Delete an image
+      description: Delete an image using its id.
+      operationId: deleteImage
+      responses:
+        '204':
+          description: Successful operation - No content returned
+        '401':
+          description: Unauthorized
+        '404':
+          description: Id Not found
+      security:
+        - user_auth:
+            - delete:user
 
 components:
   schemas:
@@ -167,13 +621,54 @@ components:
           items:
             $ref: "#/components/schemas/Project"
             description: All the projects belonging the user
+    UserPost:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        username:
+          type: string
+          example: johndoe
+        password:
+          type: string
+        role:
+          type: string
+          example: user
+          default: user
+          description: enum ['user', 'editor', 'admin']
+      required: 
+        - firstName
+        - lastName
+        - username
+        - password
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 63442662c073e
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        username:
+          type: string
+          example: johndoe
+        role:
+          type: string
+          example: user
     Project:
       type: object
       properties:
         _id:
-          type: integer
-          format: int64
-          example: 5604f32
+          type: string
+          example: 63442662c073e
         name:
           type: string
           example: My new app
@@ -184,22 +679,53 @@ components:
         company:
           type: string
         author:
-          type: array
-          items:
-            $ref: "#/components/schemas/User"
-            description: Author of the project (user)
+          type: object
+          $ref: "#/components/schemas/UserResponse"
+          description: Author of the project (user)
         tasks:
           type: array
           items:
-            $ref: "#/components/schemas/Task"
+            $ref: "#/components/schemas/TaskPost"
             description: All the tasks belonging the project
+    ProjectPost:
+      type: object
+      properties:
+        name:
+          type: string
+        active:
+          type: boolean
+          default: true
+        description:
+          type: string
+        company:
+          type: string
+      required: 
+        - name
+        - company
+    ProjectResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+        description:
+          type: string
+        company:
+          type: string
+        author:
+          type: string
+          description: Author of the project (user)
+        tasks:
+          type: array
     Task:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-          example: 5604f32
+          type: string
+          example: 63442662c073e
         name:
           type: string
           example: My task created
@@ -222,13 +748,253 @@ components:
           items:
             $ref: "#/components/schemas/Project"
             description: The project of the task
+    TaskPost:
+      type: object
+      properties:
+        name:
+          type: string
+          example: My task created
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+          example: "2022-10-19T13:20:11.686Z"
+          default: Date of creation
+        endDate:
+          type: string
+          format: date-time
+          example: "2022-10-19T14:30:11.686Z"
+        project: 
+          type: integer
+          format: int64
+          example: 5604f32fda
+          description: id of the project
+      required: 
+        - name
+        - project
+    TaskPatch:
+      type: object
+      properties:
+        name:
+          type: string
+          example: My task created
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+          example: "2022-10-19T13:20:11.686Z"
+          default: Date of creation
+        endDate:
+          type: string
+          format: date-time
+          example: "2022-10-19T14:30:11.686Z"
+        project: 
+          type: integer
+          format: int64
+          example: 5604f32fda
+          description: id of the project
+    TaskCreated:
+      type: object
+      properties:
+        id: 
+          type: integer
+          format: int64
+          example: 53604f32fda
+        name:
+          type: string
+          example: My task created
+        description:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+          example: "2022-10-19T13:20:11.686Z"
+          default: Date of creation
+        endDate:
+          format: date-time
+          example: "2022-10-19T14:30:11.686Z"
+        project: 
+          type: integer
+          format: int64
+          example: 5604f32fda
+          description: id of the project
+        user: 
+          type: integer
+          format: int64
+          example: 5604f32fda
+          description: id of the user who created the task
+    TaskEnd:
+      type: object
+      properties:
+        endDate:
+          format: date-time
+          example: "2022-10-19T14:30:11.686Z"
+          default: current Date and time
+    Nfc:
+      type: object
+      properties:
+        _id:
+          type: string
+        codeNfc:
+          type: string
+          example: 0x204738234
+        active: 
+          type: boolean
+          default: true
+        project:
+          type: string
+          example: 63525b43dd2a079ed85cecab
+    NfcPost:
+      type: object
+      properties:
+        codeNfc:
+          type: string
+          example: 0x204738234
+        active: 
+          type: boolean
+          default: true
+        project:
+          type: string
+          example: 63525b43dd2a079ed85cecab
+      required: 
+        - codeNfc
+        - project
+    NfcCreated:
+      type: object
+      properties:
+        _id:
+          type: string
+        codeNfc:
+          type: string
+          example: 0x204738234
+        active: 
+          type: boolean
+          example: true
+        project:
+          type: string
+          example: 63525b43dd2a079ed85cecab
+    NfcProject:
+      type: object
+      properties:
+        project:
+          type: string
+          example: 63525b43dd2a079ed85cecab
+    Image:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 63442662c073e
+        name:
+          type: string
+          example: My new app
+        description:
+          type: string
+        image:
+          type: string
+          example: https://link-to-my-image.ch/image.jpg
+        project:
+          type: string
+          description: The project related to the image
+    ImagePost:
+      type: object
+      properties:
+        name:
+          type: string
+          example: My new app
+        description:
+          type: string
+        image:
+          type: string
+          example: https://link-to-my-image.ch/image.jpg
+        project:
+          type: string
+          description: The project related to the image
+      required: 
+        - name
+        - image
+        - project
+    ImageResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 63442662c073e
+        name:
+          type: string
+          example: My new app
+        description:
+          type: string
+        image:
+          type: string
+          example: https://link-to-my-image.ch/image.jpg
+        project:
+          type: string
+          description: The project related to the image
+  parameters:
+    pageParam:
+      name: page
+      in: query
+      description: Page index to go (If there are many)
+      required: false
+      schema:
+        type: integer
+        format: int32
+    pageSizeParam:
+      name: pageSize
+      in: query
+      description: The size of one page (n° of documents)
+      required: false
+      schema:
+        type: integer
+        format: int32
+    usernameParam: 
+      name: User
+      in: query
+      description: The username of the author
+      required: false
+      schema: 
+        type: string
+    idUserParam:
+      name: idUser
+      in: path
+      required: true
+      description: Id of the user to retrieve
+      schema:
+        type: string
+    idTaskParam:
+      name: idTask
+      in: path
+      required: true
+      description: Id of the task to retrieve
+      schema:
+        type: string
+    idNfcParam:
+      name: idNfc
+      in: path
+      required: true
+      description: Id of the Nfc
+      schema: 
+        type: string
+    projectParam:
+      name: projectId
+      in: path
+      required: true
+      description: Id of the project to retrieve
+      schema:
+        type: string
+    imageParam:
+      name: imageId
+      in: path
+      required: true
+      description: Id of the image to retrieve
+      schema:
+        type: string
   securitySchemes:
     user_auth:
       type: http
       description: L'utilisateur doit se connecter pour effectuer des tâches
       scheme: bearer
       bearerFormat: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MzRmZDlmZWUyOGMxZDExYzMzMTlmY2UiLCJzY29wZSI6InVzZXIiLCJpYXQiOjE2NjYxODYxMzAsImV4cCI6MTY2Njc5MDkzMH0.06h-L09jS0_rNfQXwCIIcYWBo7zwtSIGz24X0Xmue6A"
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header

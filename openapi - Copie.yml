@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: Tasked - OpenAPI 3.0
+  description: |-
+    Tasked est une application de timbrage. L'application permet de créer des projets, puis de créer des tâches en "timbrant". 
+    L'idée est de l'utiliser au sein d'une entreprise afin que l'employé ait simplement à passer son téléphone sur un lecteur NFC pour envoyer une requête de "début de tâche". Idem pour la fin de la journée
+    
+    Quelques liens utiles:
+    - [Cours ArchiOWeb](https://github.com/MediaComem/comem-archioweb)
+    - [Projet github "tasked"](https://github.com/emilevl/tasked)
+    - [API Specification](https://swagger.io/specification/)
+  termsOfService: http://swagger.io/terms/
+  # TODO: Voir ce qu'il y a à garder
+  contact:
+    email: emile.vianney-liaud@heig-vd.ch
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+  # TODO: Compléter nom du serveur
+servers:
+  - url: https://tasked.onrender.com/api/
+tags:
+  - name: projects
+    description: Every information about the projects
+  - name: users
+    description: Information about the users
+  - name: tasks
+    description: Operation of tasks and how to access them
+paths:
+  /projects/:
+    get:
+      tags:
+        - projects
+      summary: Retrieve a specific project
+      description: With the id as a param, it will retrieve the specific project
+      parameters:
+        - name: projectId
+          in: query
+          description: Status values that need to be considered for filter
+          required: false
+          explode: true
+          schema:
+            type: string
+            default: available
+            enum:
+              - available
+              - pending
+              - sold
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'          
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid status value
+      security:
+        - petstore_auth:
+            - write:pets
+            - read:pets
+  /users:
+    put:
+      tags:
+        - users
+      summary: List of users
+      description: Get the list of all the users, sorted by firstName ascending
+      operationId: getUsers
+      requestBody:
+        description: Get all the users information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+        # '400':
+        #   description: Invalid ID supplied
+        # '404':
+        #   description: Pet not found
+        # '405':
+        #   description: Validation exception
+      security:
+        - user_auth:
+            - write:pets
+            - read:admin
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 63442662c073e
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        username:
+          type: string
+          example: johndoe
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100000
+        name:
+          type: string
+          example: My new app
+        active:
+          type: boolean
+        description:
+          type: string
+        company:
+          type: string
+  securitySchemes:
+    petstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
