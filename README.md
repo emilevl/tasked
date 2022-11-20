@@ -68,5 +68,17 @@ Il se connectera à la base de donnée `mongodb://127.0.0.1/tasked-test`.
 > Les tests ne couvrent actuellement pas la totalité des fichiers.
 
 # Websocket
-Le websocket est mis en place : ws://localhost:3000/
+Le websocket est mis en place.
+Pour se connecter, il suffit de se connecter via Postman avec ce lien: ws://localhost:3000/
+
+Lorsqu'un nouveau projet est créé, un message est envoyé en broadcast, dans le format suivant:
+```json
+{
+    "message": {
+        "event": "projectCreated",
+        "name": "Trial",
+        "data": ""
+    }
+}
+```
 
