@@ -5,7 +5,6 @@ mongoose.connect(config.databaseUrl);
 import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
-import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
 import tasksRouter from "./routes/tasks.js";
 import NfcRouter from "./routes/nfc.js";
@@ -38,7 +37,9 @@ app.use("/nfc", NfcRouter);
 app.use("/images", ImageRouter);
 app.use("/auth", authRouter);
 
-app.use("/", indexRouter);
+app.use("/", function(req, res, next) {
+  res.redirect("/api-docs/")
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
