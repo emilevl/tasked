@@ -1033,6 +1033,10 @@ components:
         token: 
           type: string
           description: token of the authenticated User
+        user: 
+          type: object
+          $ref: "#/components/schemas/UserResponse"
+          description: User who just logged
     UserAuthenticate:
       type: object
       properties: 
