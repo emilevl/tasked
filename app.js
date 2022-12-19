@@ -11,6 +11,7 @@ import NfcRouter from "./routes/nfc.js";
 import ImageRouter from "./routes/images.js";
 import projectsRouter from "./routes/projects.js";
 import authRouter from "./routes/auth.js";
+import cors from 'cors';
 
 // Documentation api
 import fs from 'fs';
@@ -38,8 +39,14 @@ app.use("/images", ImageRouter);
 app.use("/auth", authRouter);
 
 app.use("/", function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", process.env.CORS_DOMAIN); // update to match the domain you will make the request from
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.redirect("/api-docs/")
 });
+
+app.use(cors({
+  origin: [process.env.CORS_DOMAIN]
+}));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -56,5 +63,7 @@ app.use(function (err, req, res, next) {
   res.status(err.status || 500);
   res.send(err.message);
 });
+
+
 
 export default app;
