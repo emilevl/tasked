@@ -16,3 +16,4 @@ export const secretKey = process.env.TASKED_SECRET_KEY;
 export const databaseUrl = process.env.DATABASE_URL || 'mongodb://127.0.0.1/tasked'
 // export const server_url = process.env.SERVER_URL || 'http://localhost:3000'
 export const serverUrl = 'http://localhost:3000'
+export const corsDomain = process.env.CORS_DOMAIN || 'http://localhost:3000';

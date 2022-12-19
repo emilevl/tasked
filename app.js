@@ -31,6 +31,16 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use("/", function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", config.corsDomain); // update to match the domain you will make the request from
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.redirect("/api-docs/")
+});
+
+app.use(cors({
+  origin: [config.corsDomain]
+}));
+
 app.use("/tasks", tasksRouter);
 app.use("/projects", projectsRouter);
 app.use("/users", usersRouter);
@@ -38,15 +48,7 @@ app.use("/nfc", NfcRouter);
 app.use("/images", ImageRouter);
 app.use("/auth", authRouter);
 
-app.use("/", function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", process.env.CORS_DOMAIN); // update to match the domain you will make the request from
-	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.redirect("/api-docs/")
-});
 
-app.use(cors({
-  origin: [process.env.CORS_DOMAIN]
-}));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
